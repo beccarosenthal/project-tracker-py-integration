@@ -68,8 +68,6 @@ def get_project_by_title(title):
 
     row = db_cursor.fetchone()
 
-    import pdb; pdb.set_trace()
-
     print """Project: Title: {ttl}
     ID: {id}
     Description: {description}
@@ -78,10 +76,25 @@ def get_project_by_title(title):
                                  description=row[2],
                                  maxgr=row[3])
 
-
+#Continue working on this function. IT doesn't work yet. 
 def get_grade_by_github_title(github, title):
     """Print grade student received for a project."""
-    pass
+                                    #potentially need students.first_
+    QUERY = """SELECT project_title, grades, first_name, last_name
+               FROM grades
+                 JOIN students
+                 ON grades.student_github = students.github
+               WHERE student_github = :ghub
+               AND project_title = :ttl"""
+
+    db_cursor = db.session.execute(QUERY, {'ghub': github,
+                                           'ttl': title})
+
+    row = db_cursor.fetchone()
+    import pdb; pdb.set_trace()
+
+    print """{}"""
+
 
 
 def assign_grade(github, title, grade):
@@ -107,6 +120,11 @@ def handle_input():
         if command == "student":
             github = args[0]
             get_student_by_github(github)
+
+        elif command == "get_grade":
+            github = args[0]
+            project = " ".join(args[1:])
+            get_grade_by_github_title(github, project)
 
         elif command == "new_student":
             try:
