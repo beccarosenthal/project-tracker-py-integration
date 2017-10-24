@@ -28,7 +28,8 @@ def get_student_by_github(github):
         FROM students
         WHERE github = :github
         """
-
+        #db cursor is a query object, which is sort of an object. :github is sanitizing
+        #the user input from the terminal to make sure it will work
     db_cursor = db.session.execute(QUERY, {'github': github})
 
     row = db_cursor.fetchone()
@@ -43,12 +44,39 @@ def make_new_student(first_name, last_name, github):
     Given a first name, last name, and GitHub account, add student to the
     database and print a confirmation message.
     """
-    pass
+#note variable names to see what is corrilated with what
+    QUERY = """
+        INSERT INTO students (first_name, last_name, github)
+        VALUES (:fname, :lname, :ghub)
+        """
+    #parameter substitution happens below.
+    db.session.execute(QUERY, {'fname': first_name,
+                               'lname': last_name,
+                               'ghub': github})
+    db.session.commit()
+
+    print "Successfully added student: {first} {last}".format(
+        first=first_name, last=last_name)
 
 
 def get_project_by_title(title):
     """Given a project title, print information about the project."""
-    pass
+    
+    QUERY = """SELECT * FROM projects where title = :ttl"""
+
+    db_cursor = db.session.execute(QUERY, {'ttl': title})
+
+    row = db_cursor.fetchone()
+
+    import pdb; pdb.set_trace()
+
+    print """Project: Title: {ttl}
+    ID: {id}
+    Description: {description}
+    Max Grade: {maxgr}""".format(ttl=row[1],
+                                 id=row[0],
+                                 description=row[2],
+                                 maxgr=row[3])
 
 
 def get_grade_by_github_title(github, title):
@@ -69,6 +97,7 @@ def handle_input():
 
     command = None
 
+    # could go through here and error check input...come back to it
     while command != "quit":
         input_string = raw_input("HBA Database> ")
         tokens = input_string.split()
@@ -80,8 +109,16 @@ def handle_input():
             get_student_by_github(github)
 
         elif command == "new_student":
-            first_name, last_name, github = args  # unpack!
+            try:
+                first_name, last_name, github = args  # unpack!
+            except:
+                print "invalid. Try again."
+                continue
             make_new_student(first_name, last_name, github)
+
+        elif command == "project":
+            project = " ".join(args)
+            get_project_by_title(project)
 
         else:
             if command != "quit":
@@ -91,7 +128,7 @@ def handle_input():
 if __name__ == "__main__":
     connect_to_db(app)
 
-    # handle_input()
+    handle_input()
 
     # To be tidy, we close our database connection -- though,
     # since this is where our program ends, we'd quit anyway.
